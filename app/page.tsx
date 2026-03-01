@@ -1,10 +1,11 @@
 // app/page.tsx
 import { Suspense } from 'react'
-import { createClient } from './utils/supabase/server'
+// import { createClient } from './utils/supabase/server'
 
 async function ItemList() {
-  const supabase = await createClient()  // ← Add await here!
-  const { data: items_from_supa } = await supabase.from('items').select('*')
+  // const supabase = await createClient()
+  // const { data: items_from_supa } = await supabase.from('items').select('*')
+  let items_from_supa = null
   console.debug(`Items from supabase ${items_from_supa}`)
   let items = items_from_supa != null
     ? items_from_supa
