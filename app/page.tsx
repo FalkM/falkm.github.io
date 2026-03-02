@@ -1,62 +1,67 @@
-// app/page.tsx
-import { Suspense } from 'react'
-// import { createClient } from './utils/supabase/server'
+'use client'
 
-async function ItemList() {
-  // const supabase = await createClient()
-  // const { data: items_from_supa } = await supabase.from('items').select('*')
-  let items_from_supa = null
-  console.debug(`Items from supabase ${items_from_supa}`)
-  let items = items_from_supa != null
-    ? items_from_supa
-    :  [
-      { 
-        id: 1, 
-        name: '⚠️ No Database Connection', 
-        description: 'Using fallback data - check your Supabase connection',
-        isFallback: true 
-      },
-      { 
-        id: 2, 
-        name: 'Sample Item (Offline Mode)', 
-        description: 'This is demo data while DB is unavailable',
-        isFallback: true 
-      }
-    ]
-  
-  return (
-    <div className="grid gap-4">
-      {items?.map((item) => (
-        <div key={item.id} className="border p-4 rounded-lg">
-          <h2 className="text-xl font-semibold">{item.name}</h2>
-          <p className="text-gray-600">{item.description}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
+import { useEffect, useState } from 'react'
+import { getLinks, Link } from '@/services/links'
+import AddLinkForm from '../components/AddLinksForm'
+import LinkSkeleton from '../components/LinkSkeleton'
+import StatusBadge from '../components/StatusBadge'
 
-// Loading skeleton
-function ItemSkeleton() {
-  return (
-    <div className="grid gap-4">
-      {[1,2,3].map((i) => (
-        <div key={i} className="border p-4 rounded-lg animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export default function Home() {
+  const [links, setLinks] = useState<Link[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  async function fetchLinks() {
+    try {
+      const data = await getLinks()
+      setLinks(data)
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchLinks()
+  }, [])
+
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">My Live Demo App</h1>
-      <Suspense fallback={<ItemSkeleton />}>
-        <ItemList />
-      </Suspense>
+    <main className="p-8 max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Link Manager</h1>
+      <AddLinkForm onAdded={fetchLinks} />
+      {loading && <LinkSkeleton />}
+      {error && (
+        <div className="border border-yellow-400 bg-yellow-50 p-4 rounded-lg text-yellow-800">
+          ⚠️ Could not connect to database.
+        </div>
+      )}
+      {!loading && !error && links.length === 0 && (
+        <div className="border p-4 rounded-lg text-gray-500">
+          No links yet. Add one to get started.
+        </div>
+      )}
+      {!loading && !error && links.length > 0 && (
+        <div className="grid gap-4">
+          {links.map((link) => (
+            <div key={link.id} className="border p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xl font-semibold text-blue-600 hover:underline"
+                >
+                  {link.title ?? link.url}
+                </a>
+                <StatusBadge status={link.status} />
+              </div>
+              <p className="text-gray-400 text-sm mt-1">{link.url}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </main>
   )
 }
