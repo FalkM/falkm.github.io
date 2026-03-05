@@ -9,6 +9,7 @@ import AddLinkForm from '@/components/links/AddLinksForm'
 import LinkList from '@/components/links/link-list'
 import LinkSkeleton from '@/components/links/LinkSkeleton'
 import AuthForm from '@/components/auth/auth-form'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
@@ -34,7 +35,23 @@ export default function Home() {
     else setLoading(false)
   }
 
-  useEffect(() => { fetchUser() }, [])
+  useEffect(() => {
+    fetchUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setLinks([])
+        setLoading(false)
+      }
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user)
+        fetchLinks()
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   if (loading) return <LinkSkeleton />
   if (!user) return <AuthForm onSuccess={fetchUser} />
@@ -43,12 +60,6 @@ export default function Home() {
     <main className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Link Manager</h1>
-        <button
-          onClick={() => signOut().then(() => setUser(null))}
-          className="text-sm text-gray-500 hover:underline"
-        >
-          Sign out
-        </button>
       </div>
       <AddLinkForm onAdded={fetchLinks} />
       {!loading && <LinkList links={links} error={error} />}

@@ -9,10 +9,16 @@ export default function ConfirmPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Supabase puts the token in the URL hash — it handles it automatically
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') router.push('/')
-      if (event === 'PASSWORD_RECOVERY') router.push('/auth/reset-password')
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Check if user has no password set (first login via magic link)
+        const isFirstLogin = !session.user.user_metadata?.has_password
+        if (isFirstLogin) {
+          router.push('/auth/set-password')
+        } else {
+          router.push('/')
+        }
+      }
     })
     return () => subscription.unsubscribe()
   }, [])

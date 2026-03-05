@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'invite',
+    type: 'magiclink',
     email,
     options: {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/confirm`,
