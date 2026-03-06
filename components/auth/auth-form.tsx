@@ -1,24 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from '@/services/auth'
+import { supabase } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
-interface Props {
-  onSuccess: () => void
-}
-
-export default function AuthForm({ onSuccess }: Props) {
+export default function AuthForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   async function handleSubmit() {
     setLoading(true)
     setError(null)
     try {
-      await signIn(email, password)
-      onSuccess()
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      router.push('/')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {

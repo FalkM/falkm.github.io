@@ -10,14 +10,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setLoggedIn(!!user)
-    })
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setLoggedIn(!!session?.user)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
