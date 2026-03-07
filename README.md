@@ -1,3 +1,10 @@
+## Setup
+
+```shell
+npm install
+```
+
+
 ## Testing
 
 ### Unit tests
@@ -20,7 +27,8 @@ Pull schema
 npx supabase db pull --linked
 ```
 
-Boot up local supabase instance
+Boot up local supabase instance.
+Has to have Docker running
 ```shell
 npx supabase start
 ```

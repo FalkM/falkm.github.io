@@ -2,7 +2,8 @@
   "git": {
     "deploymentEnabled": {
       "main": true,
-      "pull-request": true,
+      "pull-request": false,
+      "merge-request": true,
       "*": false
     }
   }

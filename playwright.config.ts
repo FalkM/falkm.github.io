@@ -6,7 +6,7 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
   },
   webServer: {
-    command: 'dotenv -e .env.test -- npm run dev',
+    command: 'npx dotenv -e .env.test -- npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: false,
   },
