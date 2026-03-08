@@ -38,6 +38,11 @@ test('admin can access invite page', async ({ page }) => {
 	await expect(page).toHaveURL('/admin/invite')
 })
 
+test('arriving at set-password without session redirects to login', async ({ page }) => {
+	await page.goto('/auth/set-password')
+	await expect(page).toHaveURL(urlMatch('/auth/login'))
+})
+
 async function getInviteLink(email: string, MAILPIT_URL: string): Promise<string> {
 
 	const res = await fetch(`${MAILPIT_URL}/api/v1/messages`)
@@ -62,9 +67,37 @@ async function getInviteLink(email: string, MAILPIT_URL: string): Promise<string
 }
 
 function urlMatch(path: string) {
-  const escapedPath = path === '/' ? '\\/$' : path.replace(/\//g, '\\/') + '$'
-  return new RegExp(`(localhost|127\\.0\\.0\\.1):3000${escapedPath}`)
+	const escapedPath = path === '/' ? '\\/$' : path.replace(/\//g, '\\/') + '$'
+	return new RegExp(`(localhost|127\\.0\\.0\\.1):3000${escapedPath}`)
 }
+
+test('invite link leads to set-password page', async ({ page }) => {
+	const MAILPIT_URL = 'http://127.0.0.1:54324'
+
+	// Generate invite as admin
+	await loginAs(page, 'admin@test.com', 'password123')
+	await page.goto('/admin/invite')
+	await page.fill('input[type="email"]', 'newuser@test.com')
+	await page.click('button:has-text("Send Invite")')
+	await expect(page.locator('text=newuser@test.com')).toBeVisible({ timeout: 5000 })
+	await page.click('button:has-text("Sign out")', { force: true })
+
+	// Get invite link
+	const inviteLink = await getInviteLink('newuser@test.com', MAILPIT_URL)
+
+	// Simulate production: Supabase redirects directly to set-password
+	// by replacing redirect_to in the verify URL
+	const productionSimulatedLink = inviteLink.replace(
+		'redirect_to=http%3A%2F%2F127.0.0.1%3A3000',
+		`redirect_to=${encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL}/auth/set-password`)}`
+	)
+
+	await page.goto(productionSimulatedLink)
+
+	// Should land on set-password, NOT be redirected to login
+	await expect(page).not.toHaveURL(urlMatch('/auth/login'))
+	await expect(page).toHaveURL(/auth\/set-password/)
+})
 
 test('invite flow - user sets password and logs in', async ({ page }) => {
 	const MAILPIT_URL = 'http://127.0.0.1:54324'
@@ -73,16 +106,16 @@ test('invite flow - user sets password and logs in', async ({ page }) => {
 	// Step 1: Admin sends invite
 	await loginAs(page, 'admin@test.com', 'password123')
 	await page.goto('/admin/invite')
-	await page.fill('input[type="email"]', 'newuser@test.com')
+	await page.fill('input[type="email"]', 'newuser2@test.com')
 	await page.click('button:has-text("Send Invite")')
-	await expect(page.locator('text=newuser@test.com')).toBeVisible({ timeout: 5000 })
+	await expect(page.locator('text=newuser2@test.com')).toBeVisible({ timeout: 5000 })
 
 	// Step 2: Admin signs out
 	await page.click('button:has-text("Sign out")', { force: true })
 	await expect(page).toHaveURL(urlMatch('/auth/login'))
 
 	// Step 3: Get invite link from Mailpit
-	const inviteLink = await getInviteLink('newuser@test.com', MAILPIT_URL)
+	const inviteLink = await getInviteLink('newuser2@test.com', MAILPIT_URL)
 
 	// Step 4: New user clicks invite link
 	await page.goto(inviteLink)
@@ -96,6 +129,6 @@ test('invite flow - user sets password and logs in', async ({ page }) => {
 
 	// Step 6: Sign out and verify normal login works
 	await page.click('button:has-text("Sign out")', { force: true })
-	await loginAs(page, 'newuser@test.com', 'newpassword123')
+	await loginAs(page, 'newuser2@test.com', 'newpassword123')
 	await expect(page).toHaveURL(urlMatch('/'))
 })

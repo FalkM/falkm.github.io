@@ -8,12 +8,13 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
 	const { email } = await req.json()
+
 	if (!email) {
 		return NextResponse.json({ error: 'Email is required' }, { status: 400 })
 	}
 
 	const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-		redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/set-password`,
+		redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/login`,
 	})
 
 	if (error) {

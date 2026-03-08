@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -12,8 +11,19 @@ export default function SetPasswordPage() {
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
+		console.log('SET PASSWORD PAGE URL:', window.location.href)
+
+		const hash = window.location.hash
+		if (hash.includes('error=access_denied')) {
+			const params = new URLSearchParams(hash.substring(1))
+			const description = params.get('error_description')
+			setError(description?.replace(/\+/g, ' ') ?? 'Link expired')
+			return
+		}
+
 		async function check() {
 			const { data: { user } } = await supabase.auth.getUser()
+			console.log('SET PASSWORD USER:', !!user)
 			if (!user) router.push('/auth/login')
 		}
 		check()
@@ -28,14 +38,12 @@ export default function SetPasswordPage() {
 			setError('Password must be at least 8 characters')
 			return
 		}
-
 		setLoading(true)
 		setError(null)
-
 		try {
 			const { error: updateError } = await supabase.auth.updateUser({
 				password,
-				data: { has_password: true }  // mark password as set
+				data: { has_password: true }
 			})
 			if (updateError) throw updateError
 			router.push('/')
