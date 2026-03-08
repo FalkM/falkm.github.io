@@ -1,0 +1,10 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "pull-request": false,
+      "merge-request": true,
+      "*": false
+    }
+  }
+}

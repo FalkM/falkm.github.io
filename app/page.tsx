@@ -1,62 +1,46 @@
-// app/page.tsx
-import { Suspense } from 'react'
-// import { createClient } from './utils/supabase/server'
+'use client'
 
-async function ItemList() {
-  // const supabase = await createClient()
-  // const { data: items_from_supa } = await supabase.from('items').select('*')
-  let items_from_supa = null
-  console.debug(`Items from supabase ${items_from_supa}`)
-  let items = items_from_supa != null
-    ? items_from_supa
-    :  [
-      { 
-        id: 1, 
-        name: '⚠️ No Database Connection', 
-        description: 'Using fallback data - check your Supabase connection',
-        isFallback: true 
-      },
-      { 
-        id: 2, 
-        name: 'Sample Item (Offline Mode)', 
-        description: 'This is demo data while DB is unavailable',
-        isFallback: true 
-      }
-    ]
-  
-  return (
-    <div className="grid gap-4">
-      {items?.map((item) => (
-        <div key={item.id} className="border p-4 rounded-lg">
-          <h2 className="text-xl font-semibold">{item.name}</h2>
-          <p className="text-gray-600">{item.description}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Loading skeleton
-function ItemSkeleton() {
-  return (
-    <div className="grid gap-4">
-      {[1,2,3].map((i) => (
-        <div key={i} className="border p-4 rounded-lg animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
-      ))}
-    </div>
-  )
-}
+import { useEffect, useState } from 'react'
+import { getLinks } from '@/services/links'
+import { Link } from '@/model/links'
+import AddLinkForm from '@/components/links/AddLinksForm'
+import LinkList from '@/components/links/link-list'
+import LinkSkeleton from '@/components/links/LinkSkeleton'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Home() {
+  const [links, setLinks] = useState<Link[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  async function fetchLinks() {
+    try {
+      const data = await getLinks()
+      setLinks(data)
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchLinks()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') fetchLinks()
+      if (event === 'SIGNED_OUT') setLinks([])
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) return <LinkSkeleton />
+
   return (
-    <main className="p-8">
-      <h1 className="text-3xl font-bold mb-6">My Live Demo App</h1>
-      <Suspense fallback={<ItemSkeleton />}>
-        <ItemList />
-      </Suspense>
+    <main className="p-8 max-w-2xl mx-auto">
+      <AddLinkForm onAdded={fetchLinks} />
+      <LinkList links={links} error={error} />
     </main>
   )
 }
