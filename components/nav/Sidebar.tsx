@@ -62,7 +62,10 @@ export default function Sidebar() {
       <div className="flex flex-col gap-1">
         {email && <p className="text-xs text-gray-400 truncate px-3">{email}</p>}
         <button
-          onClick={() => signOut().then(() => router.push('/'))}
+          onClick={() => signOut().then(() => { 
+            // force a full page reload, which ensures the proxy reads the cleared session cookie
+            window.location.href = '/auth/login' 
+          })}
           className="px-3 py-2 rounded text-sm text-left text-gray-600 hover:bg-gray-100"
         >
           Sign out

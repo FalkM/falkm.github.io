@@ -132,3 +132,24 @@ test('invite flow - user sets password and logs in', async ({ page }) => {
 	await loginAs(page, 'newuser2@test.com', 'newpassword123')
 	await expect(page).toHaveURL(urlMatch('/'))
 })
+
+test('after sign out user cannot see protected content', async ({ page }) => {
+	await loginAs(page, 'user@test.com', 'password123')
+	await expect(page).toHaveURL(urlMatch('/'))
+
+	// Sign out
+	await page.click('button:has-text("Sign out")', { force: true })
+
+	// Should be on login page
+	await expect(page).toHaveURL(urlMatch('/auth/login'))
+
+	// Navigating back to home should redirect to login, not show links page
+	await page.goto('/')
+	await page.screenshot({ path: 'test-results/screenshots/after-signout-goto-home.png' })
+	await expect(page).toHaveURL(urlMatch('/auth/login'))
+
+	// Ensure no protected content is visible
+	await expect(page.locator('text=Link Manager')).not.toBeVisible()
+	// Ensure login form is visible
+	await expect(page.locator('button[type="submit"]')).toBeVisible()
+})
