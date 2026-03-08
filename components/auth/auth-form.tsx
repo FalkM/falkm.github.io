@@ -17,6 +17,7 @@ export default function AuthForm() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
+      router.refresh()
       router.push('/')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error')
@@ -44,6 +45,7 @@ export default function AuthForm() {
       />
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <button
+        type="submit"
         onClick={handleSubmit}
         disabled={loading || !email || !password}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"

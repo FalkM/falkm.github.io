@@ -4,7 +4,9 @@ async function loginAs(page: any, email: string, password: string) {
   await page.goto('/auth/login')
   await page.fill('input[type="email"]', email)
   await page.fill('input[type="password"]', password)
+  await page.screenshot({ path: 'test-results/screenshots/before-login.png' })
   await page.click('button[type="submit"]')
+  await page.screenshot({ path: 'test-results/screenshots/after-login.png' })
   await page.waitForURL('/')
 }
 

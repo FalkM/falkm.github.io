@@ -2,10 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "./client";
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest) {  
   let supabaseResponse = NextResponse.next({ request });
 
   if (!hasEnvVars) {
+    console.error('UPDATE SESSION: no env vars')
     const url = request.nextUrl.clone();
     url.pathname = '/error';
     return NextResponse.redirect(url);
@@ -36,46 +37,36 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
   const pathname = request.nextUrl.pathname
 
-  // Redirect unauthenticated users to login
-  if (
-    !user &&
-    pathname !== '/' &&
-    !pathname.startsWith('/auth')
-  ) {
+  if (!user && pathname !== '/' && !pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
   }
 
-  // Redirect unauthenticated users away from home
   if (!user && pathname === '/') {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from login page
   if (user && pathname === '/auth/login') {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
-  // Block /auth/sign-up entirely
   if (pathname === '/auth/sign-up') {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
   }
 
-  // Admin route protection
   if (pathname.startsWith('/admin')) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/auth/login';
       return NextResponse.redirect(url);
     }
-
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
