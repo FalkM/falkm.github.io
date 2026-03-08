@@ -1,4 +1,4 @@
-import { Link } from '@/types/links'
+import { Link } from '@/model/links'
 import StatusBadge from './StatusBadge'
 
 interface Props {

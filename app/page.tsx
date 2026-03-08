@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getLinks } from '@/services/links'
-import { Link } from '@/types/links'
+import { Link } from '@/model/links'
 import AddLinkForm from '@/components/links/AddLinksForm'
 import LinkList from '@/components/links/link-list'
 import LinkSkeleton from '@/components/links/LinkSkeleton'

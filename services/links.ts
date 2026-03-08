@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
-import { Link } from '@/types/links'
+import { Link } from '@/model/links'
 
 export async function addLink(url: string, title?: string): Promise<Link> {
   const { data: { user } } = await supabase.auth.getUser()

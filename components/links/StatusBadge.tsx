@@ -1,4 +1,4 @@
-import { Link } from "@/types/links"
+import { Link } from "@/model/links"
 
 export default function StatusBadge({ status }: { status: Link['status'] }) {
   const styles: Record<Link['status'], string> = {
