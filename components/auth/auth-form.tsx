@@ -35,6 +35,7 @@ export default function AuthForm() {
 				value={email}
 				onChange={(e) => setEmail(e.target.value)}
 				className="border rounded px-3 py-2 text-sm"
+				suppressHydrationWarning
 			/>
 			<input
 				type="password"
@@ -42,6 +43,7 @@ export default function AuthForm() {
 				value={password}
 				onChange={(e) => setPassword(e.target.value)}
 				className="border rounded px-3 py-2 text-sm"
+				suppressHydrationWarning
 			/>
 			{error && <p className="text-red-500 text-sm">{error}</p>}
 			<button
